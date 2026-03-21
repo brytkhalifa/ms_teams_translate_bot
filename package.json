@@ -1,0 +1,36 @@
+{
+    "name": "quote-agent",
+    "version": "0.0.0",
+    "license": "MIT",
+    "private": true,
+    "main": "dist/index",
+    "types": "dist/index",
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "clean": "npx rimraf ./dist",
+        "build": "npx tsup",
+        "start": "node .",
+        "dev": "tsx watch -r dotenv/config src/index.ts"
+    },
+    "dependencies": {
+        "@microsoft/teams.api": "latest",
+        "@microsoft/teams.apps": "latest",
+        "@microsoft/teams.cards": "latest",
+        "@microsoft/teams.common": "latest",
+        "@microsoft/teams.dev": "latest",
+        "@microsoft/teams.graph": "latest",
+        "deepl-node": "^1.24.0",
+        "openai": "^6.32.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.5.4",
+        "dotenv": "^16.4.5",
+        "rimraf": "^6.0.1",
+        "tsup": "^8.4.0",
+        "tsx": "^4.20.6",
+        "typescript": "^5.4.5"
+    }
+}

@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and caches
+logs/
+*.log
+npm-debug.log*
+.npm/
+.cache/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE (optional — remove if you want shared editor settings)
+.idea/
+*.swp
+*.swo
+
+# Teams / tooling artifacts (uncomment if you generate these locally)
+# appPackage/*.zip
+# *.pfx
