@@ -13,7 +13,9 @@
         "clean": "npx rimraf ./dist",
         "build": "npx tsup",
         "start": "node .",
-        "dev": "tsx watch -r dotenv/config src/index.ts"
+        "dev": "tsx watch -r dotenv/config src/index.ts",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "dependencies": {
         "@microsoft/teams.api": "latest",
@@ -26,11 +28,13 @@
         "openai": "^6.32.0"
     },
     "devDependencies": {
+        "@types/express": "^5.0.0",
         "@types/node": "^22.5.4",
         "dotenv": "^16.4.5",
         "rimraf": "^6.0.1",
         "tsup": "^8.4.0",
         "tsx": "^4.20.6",
-        "typescript": "^5.4.5"
+        "typescript": "^5.4.5",
+        "vitest": "^4.1.0"
     }
 }

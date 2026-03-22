@@ -2,9 +2,10 @@ import OpenAI from 'openai';
 import { OpenAIAdapter } from '../adapters/openai/OpenAIAdapter';
 import { OpenAIEchoAdapter } from '../adapters/openai/OpenAIEchoAdapter';
 import { OpenAIHttpAdapter } from '../adapters/openai/OpenAIHttpAdapter';
+import { isLiveApiEnabled } from '../config/envMode';
 
 export function createOpenAIAdapter(): OpenAIAdapter {
-  if ([false, 'false', '0', 'no', 'n'].includes((process.env.OpenAI_MODE || 'false').toLowerCase()) ) {
+  if (!isLiveApiEnabled(process.env.OPENAI_MODE)) {
     return new OpenAIEchoAdapter();
   }
 

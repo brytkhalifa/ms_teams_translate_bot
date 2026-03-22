@@ -1,9 +1,10 @@
 import { DeepLAdapter } from '../adapters/deepl/DeepLAdapter';
 import { DeepLEchoAdapter } from '../adapters/deepl/DeepLEchoAdapter';
 import { DeepLHttpAdapter } from '../adapters/deepl/DeepLHttpAdapter';
+import { isLiveApiEnabled } from '../config/envMode';
 
 export function createDeepLAdapter(): DeepLAdapter {
-  if ([false, 'false', '0', 'no', 'n'].includes((process.env.DEEPL_MODE as string | false).toLowerCase()) ){
+  if (!isLiveApiEnabled(process.env.DEEPL_MODE)) {
     return new DeepLEchoAdapter();
   }
 

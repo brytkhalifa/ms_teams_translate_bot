@@ -10,7 +10,8 @@ Microsoft Teams bot with a **personal static tab** for **DeepL translation** and
   - Thread items are labeled **DeepL** vs **ChatGPT** (`data-kind` on each card for styling).
 - **Bot (1:1 / channel)**:  
   - Message **with** a language prefix (e.g. `en Wie heißt du`) → translate via DeepL.  
-  - Message **without** a prefix → OpenAI `prompt` (rewrite / assist).
+  - Message **without** a prefix → OpenAI `prompt` (rewrite / assist).  
+  - Send **`tr help`** (or `tr hlep`) for a full list of DeepL prefixes and usage (`tr help` is handled locally, no AI call).
 - **HTTP APIs** used by the tab (JSON under `/api*` is parsed by the Teams app host).
 
 ## Requirements
@@ -26,15 +27,15 @@ Create a `.env` in this folder for local development (`npm run dev` loads it via
 | Variable | Purpose |
 |----------|---------|
 | `PORT` | HTTP port (default `3978`) |
-| `DEEPL_MODE` | Set to any **truthy** value (e.g. `1`) to use the real DeepL API. If **unset**, a **DeepL echo** adapter is used (returns input as “translation”). |
-| `DEEPL_API_KEY` | Required when `DEEPL_MODE` is set and you want live translation. |
+| `DEEPL_MODE` | **Opt-in** to the real DeepL API: set to `1`, `true`, `yes`, `on`, or `y` (case-insensitive). If **unset** or any other value, a **DeepL echo** adapter is used. |
+| `DEEPL_API_KEY` | Required when `DEEPL_MODE` opts in and you want live translation. |
 | `DEEPL_API_URL` | Optional DeepL API base URL (see `DeepLHttpAdapter`; defaults to free API host). |
 | `DEEPL_TARGET_LANG` | Default target language for the tab/API when not specified (default `EN-US`). |
 | `OPENAI_MODE` | Set to any **truthy** value (e.g. `1`) with `OPENAI_API_KEY` to call OpenAI. If **unset**, an **OpenAI echo** adapter is used. |
 | `OPENAI_API_KEY` | Required for live OpenAI when `OPENAI_MODE` is set. |
 | `OPENAI_MODEL` | Chat / prompt model (default `gpt-4o-mini`). |
 
-If `OPENAI_API_KEY` or `DEEPL_API_KEY` is missing while the corresponding `_MODE` is enabled, adapter creation fails gracefully and that integration is **disabled** (`null` in the container) instead of crashing the process.
+If `OPENAI_API_KEY` or `DEEPL_API_KEY` is missing while the corresponding `_MODE` opts in, adapter creation fails gracefully and that integration is **disabled** (`null` in the container) instead of crashing the process.
 
 ## Scripts
 
@@ -43,7 +44,16 @@ npm install
 npm run dev      # watch + dotenv — src/index.ts
 npm run build    # tsup → dist/
 npm start        # node . (uses dist/)
+npm test         # vitest (unit tests in test/)
+npm run test:watch
 ```
+
+## Testing
+
+Unit tests use [Vitest](https://vitest.dev/) (`vitest.config.ts`). They live under [`test/`](test/) and cover:
+
+- `envMode`, `chatLimits`, `mapApiFailure`, `parseChatRequestBody`, `targetLanguageMapper` (including `tr help` help text)
+- `TeamsBotMessageService`, `TranslateTabService`, `ChatTabService` with mocked adapters
 
 ## Teams app package
 
@@ -93,25 +103,34 @@ Rules enforced server-side:
 
 ## Bot: language prefixes
 
-Prefixes map to DeepL target codes (examples: `en`, `english` → `EN-US`; `de`, `german` → `DE`). See [`src/mappers/targetLanguageMapper.ts`](src/mappers/targetLanguageMapper.ts) for the full map.
+Prefixes map to DeepL target codes (examples: `en`, `english` → `EN-US`; `de`, `german` → `DE`). See [`src/mappers/targetLanguageMapper.ts`](src/mappers/targetLanguageMapper.ts) for the full map. In chat, send **`tr help`** to print every prefix grouped by target code (same source as the mapper).
 
 ## Project layout
 
 ```
 src/
-  index.ts                 # App entry: routes, tab, bot handler
-  services/TranslationService.ts
-  tabs/translate-chat.html # Personal tab UI
-  adapters/deepl/          # DeepL HTTP + echo
-  adapters/openai/         # OpenAI chat.completions + prompt + echo
-  container/buildContainer.ts
-  factories/               # Env-based adapter wiring
+  index.ts                    # App construction, composeApp, start
+  composeApp.ts               # buildContainer + registerTabAndBotHandlers; returns AppContainer
+  api/types.ts                # Tab API result types
+  config/envMode.ts           # OPENAI_MODE / DEEPL_MODE opt-in parsing
+  config/chatLimits.ts        # Chat payload limits from env
+  validation/parseChatRequestBody.ts
+  http/                       # registerApiRoutes, registerStaticTabs, mapApiFailure, resolveTabFilePath
+  services/
+    TranslateTabService.ts    # GET /api/translate
+    ChatTabService.ts         # POST /api/chat
+    TeamsBotMessageService.ts # Bot 1:1 / channel messages
+  tabs/translate-chat.html
+  adapters/deepl/
+  adapters/openai/
+  container/buildContainer.ts # Adapters + TranslateTabService, ChatTabService, TeamsBotMessageService; `get()` accessor
+  factories/
 appPackage/manifest.json
 ```
 
 ## Static tab file path
 
-At runtime the server prefers `dist/tabs/translate-chat.html` if it exists, otherwise `src/tabs/translate-chat.html`. The default **tsup** build only emits `dist/index.js`; for production you may copy `src/tabs/*.html` into `dist/tabs/` in your deploy pipeline, or run from a layout that includes `src/tabs`.
+At runtime the server prefers `dist/tabs/translate-chat.html` if it exists, otherwise `src/tabs/translate-chat.html`. **tsup** bundles app code to `dist/index.js`; HTML stays under `src/tabs` unless you copy it into `dist/tabs/` during deploy.
 
 ## License
 

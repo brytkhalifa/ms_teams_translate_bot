@@ -77,3 +77,33 @@ export function parseTargetLanguageMessage(
     hasLanguagePrefix: true,
   };
 }
+
+/** Multi-line help for the Teams bot: DeepL prefixes derived from the same map as parsing. */
+export function buildDeepLBotHelpMessage(): string {
+  const byTarget = new Map<string, string[]>();
+  for (const [prefix, target] of Object.entries(LANGUAGE_PREFIX_TO_TARGET)) {
+    const list = byTarget.get(target) ?? [];
+    list.push(prefix);
+    byTarget.set(target, list);
+  }
+
+  for (const list of byTarget.values()) {
+    list.sort((a, b) => a.localeCompare(b));
+  }
+
+  const lines = [...byTarget.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([target, prefixes]) => `${target}: ${prefixes.join(', ')}`);
+
+  return [
+    'DeepL (bot): start with a language prefix, then the text to translate.',
+    'Example: en Hello world  or  deutsch Wie geht es dir',
+    '',
+    'Messages without a prefix go to OpenAI for rewrite/help (when OPENAI is configured).',
+    '',
+    'Send tr help anytime to show this list.',
+    '',
+    'Prefixes (alias → DeepL target code):',
+    ...lines,
+  ].join('\n');
+}
